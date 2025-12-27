@@ -1,7 +1,7 @@
 # Implementation of the random forest (classification) ML algorithm 
 # Evaluated on crime statistics at https://archive.ics.uci.edu/dataset/183/communities+and+crime
 
-#from random_forest import RandomForest 
+from random_forest import RandomForest 
 import pickle as pl
 import math
 import numpy as np
@@ -13,6 +13,7 @@ from pathlib import Path
 from functools import cache
 from ucimlrepo import fetch_ucirepo
 from random import shuffle
+from time import perf_counter
 
 #TODO: multiply continuous with 0.999
 
@@ -41,27 +42,25 @@ def setup_data(
             print("Found cached data")
             return pl.load(file)
     except FileNotFoundError:
-        pass #I don't quite know if this is considered better or not
+        print("No cached data\nRetrieving dataset from the repository")
+        fetched_data = fetch_ucirepo(id=183) 
 
-    print("No cached data\nRetrieving dataset from the repository")
-    fetched_data = fetch_ucirepo(id=183) 
+        #original = fetched_data.data.original
+        #original = original.drop(columns=non_predictive_columns)
+        #original = _handle_missing_values(original)
 
-    #original = fetched_data.data.original
-    #original = original.drop(columns=non_predictive_columns)
-    #original = _handle_missing_values(original)
+        X = fetched_data.data.features
+        X = X.drop(columns=non_predictive_columns)
+        X = _handle_missing_values(X)
 
-    X = fetched_data.data.features
-    X = X.drop(columns=non_predictive_columns)
-    X = _handle_missing_values(X)
+        y = discretize_target(fetched_data.data.targets["ViolentCrimesPerPop"], outcome_count)
 
-    y = discretize_target(fetched_data.data.targets["ViolentCrimesPerPop"], outcome_count)
+        print(y, type(y))
 
-    print(y, type(y))
+        res = (X, y)
 
-    res = (X, y)
-
-    pl.dump(res, open(file_name, "wb"))
-    return res 
+        pl.dump(res, open(file_name, "wb"))
+        return res 
 
 
 def divide_data(X, y, training_percentage):
@@ -75,7 +74,12 @@ def divide_data(X, y, training_percentage):
 
 
 def evaluate_model(forest, X, y):
-    return True
+    count = 0
+    for i in range(len(X)):
+        count += (forest.evaluate(X.iloc[i]) == y[i])
+
+    return count / len(X)
+
 
 
 def main(outcome_count = 2, training_percentage = 0.8, tree_count = 100, data_per_tree = 100, max_height = 20):
@@ -85,13 +89,15 @@ def main(outcome_count = 2, training_percentage = 0.8, tree_count = 100, data_pe
     print("Creating training and test datasets")
     X_tr, y_tr, X_te, y_te = divide_data(X, y, training_percentage)
     
-    #print("Starting training")
-    #forest = RandomForest(X_tr, y_tr, X.data.features, tree_count, data_per_tree, max_height, outcome_count)
+    print("Starting training")
+    start = perf_counter()
+    forest = RandomForest(X_tr, y_tr, X.data.features, tree_count, data_per_tree, max_height, outcome_count)
+    end = perf_counter()
+    print(f"Training took {end - start} μs")
 
     print("Evaluating model")
-    #percent = evaluate_model(forest, X_te, y_te)
-    #print(f"Percent of correct guesses: {percent}%")
-
+    percent = evaluate_model(forest, X_te, y_te)
+    print(f"Percent of correct guesses: {percent}%")
 
 
 if __name__ == "__main__":

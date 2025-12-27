@@ -10,7 +10,6 @@ from random import randrange
 import cython
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cpython.ref cimport Py_INCREF, Py_DECREF, PyObject
-#from cpython.object cimport PyObject
 
 
 cdef class DecisionTree:
@@ -204,9 +203,10 @@ cdef class RandomForest:
     cdef int tree_count
     cdef PyObject** trees
     cdef int* count
-    cdef DecisionTree new_tree
 
     def __cinit__(self, X, y, feature_names, int tree_count, int data_per_tree, int max_height, int number_of_labels):
+        cdef DecisionTree new_tree
+       
         self.tree_count = tree_count
         self.trees = <PyObject**> PyMem_Malloc(tree_count * sizeof(PyObject*))
         self.count = <int*> PyMem_Malloc(number_of_labels * sizeof(int))
