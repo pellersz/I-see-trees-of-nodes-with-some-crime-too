@@ -27,7 +27,7 @@ def _handle_missing_values(df):
 
 def discretize_target(y, outcome_count):
     for i in range(outcome_count):
-        y[i] = math.floor(y[i] * outcome_count);
+        y.iloc[i] = math.floor(y.iloc[i] * outcome_count);
 
     return y
 
@@ -55,7 +55,7 @@ def setup_data(
 
         y = discretize_target(fetched_data.data.targets["ViolentCrimesPerPop"], outcome_count)
 
-        print(y, type(y))
+        #print(y, type(y))
 
         res = (X, y)
 
@@ -81,7 +81,6 @@ def evaluate_model(forest, X, y):
     return count / len(X)
 
 
-
 def main(outcome_count = 2, training_percentage = 0.8, tree_count = 100, data_per_tree = 100, max_height = 20):
     print("Getting data")
     X, y = setup_data(outcome_count=outcome_count) 
@@ -91,7 +90,7 @@ def main(outcome_count = 2, training_percentage = 0.8, tree_count = 100, data_pe
     
     print("Starting training")
     start = perf_counter()
-    forest = RandomForest(X_tr, y_tr, X.data.features, tree_count, data_per_tree, max_height, outcome_count)
+    forest = RandomForest(X_tr, y_tr.iloc, X.keys(), tree_count, data_per_tree, max_height, outcome_count)
     end = perf_counter()
     print(f"Training took {end - start} μs")
 

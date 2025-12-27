@@ -33,11 +33,14 @@ cdef class DecisionTree:
         cdef float new_res
         cdef float divider
 
+        print("emptying helper")
         for i in range(category_count):
             for j in range(number_of_labels + 1):
                 self.training_helper[i][j] = 0
+        print("emptied")
 
-        if is_categorical: 
+        if is_categorical:
+            print("categorical?")
             for i in range(n):
                 self.training_helper[X[feature][i]][y[i]] += 1
                 self.training_helper[X[feature][i]][number_of_labels] += 1
@@ -58,39 +61,43 @@ cdef class DecisionTree:
             
             return res
 
-        else:
-            self.training_helper[1][number_of_labels] = n
-            for i in range(n):
-                self.training_helper[1][y[i]] += 1
+        print("not categorical")
+        self.training_helper[1][number_of_labels] = n
+        print("populating helper")
+        for i in range(n):
+            print(f"at 1 {y[i]}")
+            self.training_helper[1][y[i]] += 1
+        print("getting column")
 
-            column = X[feature].copy().sort_values()
+        column = X[feature].copy().sort_values()
 
-            for i in range(1, n - 1):
-                self.training_helper[1][y[i - 1]] -= 1
-                self.training_helper[1][number_of_labels] -= 1
-                self.training_helper[0][y[i - 1]] += 1
-                self.training_helper[0][number_of_labels] += 1
+        for i in range(1, n - 1):
+            print(f"calculating split {i}")
+            self.training_helper[1][y[i - 1]] -= 1
+            self.training_helper[1][number_of_labels] -= 1
+            self.training_helper[0][y[i - 1]] += 1
+            self.training_helper[0][number_of_labels] += 1
     
-                new_res = 0.0
+            new_res = 0.0
 
-                if column[i - 1] != column[i]:
-                    divider = (column[i - 1] + column[i]) / 2
-                    for ii in range(category_count):
-                        child_entropy = 0.0
-                        for j in range(number_of_labels):
-                            if self.training_helper[ii][j] == 0:
-                                continue
+            if column[i - 1] != column[i]:
+                divider = (column[i - 1] + column[i]) / 2
+                for ii in range(category_count):
+                    child_entropy = 0.0
+                    for j in range(number_of_labels):
+                        if self.training_helper[ii][j] == 0:
+                            continue
 
-                            p = float(self.training_helper[ii][j]) / self.training_helper[ii][number_of_labels]
-                            child_entropy -= p * math.log(p)
-                    
-                        new_res -= (self.training_helper[ii][number_of_labels] / n) * child_entropy
+                        p = float(self.training_helper[ii][j]) / self.training_helper[ii][number_of_labels]
+                        child_entropy -= p * math.log(p)
+                
+                    new_res -= (self.training_helper[ii][number_of_labels] / n) * child_entropy
 
-                    if res < new_res:
-                        res = new_res 
-                        self.tmpdivider = divider
-            
-            return res
+                if res < new_res:
+                    res = new_res 
+                    self.tmpdivider = divider
+        
+        return res
 
 
     def __cinit__(self, X, y, features, int height_left, int number_of_labels):
@@ -103,6 +110,8 @@ cdef class DecisionTree:
         cdef float gain 
         cdef float best_gain
         cdef DecisionTree new_child
+
+        print("building tree")
 
         self.decision = -1
         self.children = NULL
@@ -126,13 +135,18 @@ cdef class DecisionTree:
             PyMem_Free(count)
             return
 
+        print("lastsames")
+        print(y, y.iloc[0])
         while last_same < n and y[last_same] == y[0]:
+            print(last_same, y[last_same])
             last_same += 1
 
+        print("donesames")
         if last_same == n:
             self.decision = y[0] 
             return
 
+        print("calculating max category count")
         for i in range(len(features)):
             if max_category_count < features[i][2]:
                 max_category_count = features[i][2]
@@ -144,7 +158,10 @@ cdef class DecisionTree:
         best_feature_ind = -1
         best_gain = -float("inf")
         
+        print(f"max categorical: {max_category_count}, other max: {number_of_labels + 1}")
+
         for i in range(len(features)):
+            print(f"calculating gain {i}")
             curr_feature = features[i]
             gain = self.calculate_gain(X, y, curr_feature[0], curr_feature[1], curr_feature[2], number_of_labels)
             if gain > best_gain:
@@ -213,17 +230,21 @@ cdef class RandomForest:
         features = []
 
         for i in range(len(feature_names)):
-            if type(X[feature_names[i][0]]) == int:
+            #print(np.issubdtype(type(X[feature_names[i]].iloc[0]), np.floating))
+            if np.issubdtype(type(X[feature_names[i]].iloc[0]), np.integer):
                 categories = set()
                 for category in X[feature_names[i]]:
                     categories.add(category)
                 features.append((feature_names[i], True, len(categories)))
-            elif type(X[feature_names[i][0]]) == float:
+            elif np.issubdtype(type(X[feature_names[i]].iloc[0]), np.floating):
                 features.append((feature_names[i], False, 2))
             else:
                 pass
         
-        for i in range(tree_count):        
+        for i in range(tree_count): 
+            print(f"tree {i}")
+            print(len(features))
+            print(features[0])
             sample = [randrange(len(X)) for _ in range(data_per_tree)]
             X_sample = X.reindex(sample)
             y_sample = y.reindex(sample)

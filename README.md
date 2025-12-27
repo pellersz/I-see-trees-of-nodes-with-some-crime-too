@@ -2,7 +2,7 @@
 Not much else to say about it
 
 #### How to build
-run `uv run setup.py build_ext --inplace` then `uv run main.py` (or i'll just make a shellscript so it will be easier)
+run `uv run setup.py build_ext --inplace` then `uv run main.py` or just run the `full_run.sh` script
 
 #### Features
 - The tree is implemented with Cython so have fun reading reference counting and memory allocations
