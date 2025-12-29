@@ -2,6 +2,7 @@
 # Evaluated on crime statistics at https://archive.ics.uci.edu/dataset/183/communities+and+crime
 
 from random_forest import RandomForest 
+from rando_forest import RandoForest
 import pickle as pl
 import math
 import numpy as np
@@ -84,16 +85,24 @@ def main(outcome_count = 2, training_percentage = 0.8, tree_count = 100, data_pe
 
     print("Creating training and test datasets")
     X_tr, y_tr, X_te, y_te = divide_data(X, y, training_percentage)
-    
+   
     print("Starting training")
     start = perf_counter()
-    forest = RandomForest(X_tr, y_tr, X.keys(), tree_count, data_per_tree, max_height, outcome_count)
-    end = perf_counter()
-    print(f"Training took {end - start} μs")
 
-    print("Evaluating model")
-    percent = evaluate_model(forest, X_te, y_te)
-    print(f"Percent of correct guesses: {percent}%")
+    #forest = RandomForest(X_tr, y_tr, X.keys(), tree_count, data_per_tree, max_height, outcome_count)
+    forest = RandoForest(X_tr, y_tr, X.keys(), tree_count, data_per_tree, max_height, outcome_count)
+    end = perf_counter()
+    print(f"Training took {end - start} s") 
+
+    percent = evaluate_model(forest, X_te, y_te.iloc)
+    print(f"Test correctness: {percent * 100}%")
+    percent = evaluate_model(forest, X_tr, y_tr.iloc)
+    print(f"Training correctness: {percent * 100}%")
+    
+    counter = 0
+    for i in range(len(y_te)):
+        counter += (y_te.iloc[i] == 0)
+    print(counter / len(y_te))
 
 
 if __name__ == "__main__":
