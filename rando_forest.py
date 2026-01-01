@@ -157,8 +157,10 @@ class _DecisionTree:
 
 
 class RandoForest:
+ 
     def _do_it(self, X, y, features, max_height, method, number_of_labels, idx):
         self.trees[idx] = _DecisionTree(X, y, features, max_height, method, number_of_labels)
+
 
     def __init__(self, X, y, feature_names, tree_count, data_per_tree, max_height, method, number_of_labels):
         self.number_of_labels = number_of_labels

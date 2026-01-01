@@ -1,10 +1,13 @@
 # Implementation of the random forest (classification) ML algorithm 
 # Evaluated on crime statistics at https://archive.ics.uci.edu/dataset/183/communities+and+crime
 
-from random_forest import RandomForest 
+from rrr import RandomForest
+#from random_forest import RandomForest 
 from rando_forest import RandoForest
 import pickle as pl
 import numpy as np
+import warnings
+warnings.simplefilter(action="ignore", category=FutureWarning)
 import pandas as pd
 import sklearn as sk
 from ucimlrepo import fetch_ucirepo
@@ -49,7 +52,7 @@ def setup_data(
 def evaluate_model(forest, X, y):
     count = 0
     for i in range(len(X)):
-        if type(forest) == RandoForest:
+        if type(forest) == RandoForest or type(forest) == RandomForest:
             count += (forest.evaluate(X.iloc[i]) == y[i])
         else:
             count += (forest.predict(X.reindex([X.index[i]])) == y[i])
@@ -73,7 +76,7 @@ def tree_count_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count
         print(f"test accuracy = {test_accuracy / 4}, train accuracy = {train_accuracy / 4}, in {time_used / 4} seconds with parameters: tree_count = {tree_count}, data_per_tree = {data_per_tree}")
 
 
-def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count = 15, min_data_per_tree = 10, max_data_per_tree = 150):
+def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count = 100, min_data_per_tree = 10, max_data_per_tree = 150):
     best_test = 0
     best_train = 0
 
@@ -87,7 +90,7 @@ def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_
                     break
 
                 start = perf_counter()
-                forest = RandoForest(X_tr, y_tr, X_tr.keys(), tree_count, data_per_tree, 20, method, 2)
+                forest = RandomForest(X_tr, y_tr, X_tr.keys(), tree_count, data_per_tree, 20, method, 2)
                 time_used = perf_counter() - start
                 evaluation_test = evaluate_model(forest, X_te, y_te.iloc)
                 evaluation_train = evaluate_model(forest, X_tr, y_tr.iloc)
@@ -133,8 +136,8 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         y_te = y.iloc[lambda x: (i * chunk_size <= x.index) & ((i + 1) * chunk_size > x.index)]
 
         start = perf_counter()
-        if forest_type == RandoForest:
-            forest = RandoForest(X_tr, y_tr, X.keys(), tree_count, data_per_tree, max_height, "gini", outcome_count)
+        if forest_type == RandoForest or forest_type == RandomForest:
+            forest = forest_type(X_tr, y_tr, X.keys(), tree_count, data_per_tree, max_height, "gini", outcome_count)
             evaluate = forest.evaluate
  
         else:
@@ -149,7 +152,7 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         tn = 0
         fn = 0
         for j in range(len(X_te)):
-            if forest_type == RandoForest: 
+            if forest_type == RandoForest or forest_type == RandomForest: 
                 pred_label = evaluate(X_te.iloc[j])
             else:
                 pred_label = evaluate(X_te.reindex([X_te.index[j]]))
@@ -164,10 +167,12 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
                 fn += 1
             else:
                 tn += 1
+
+
         accuracy_te += (tp + tn) / len(X_te)
-        precision_te += tp / (tp + fp)
-        recall_te += tp / (tp + fn)
-        specificity_te += tn / (tn + fp)
+        precision_te += (0 if tp == 0 else tp / (tp + fp))
+        recall_te += (0 if tp == 0 else tp / (tp + fn))
+        specificity_te += (0 if tn == 0 else tn / (tn + fp))
 
 
         tp = 0
@@ -175,7 +180,7 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         tn = 0
         fn = 0
         for j in range(len(X_tr)):
-            if forest_type == RandoForest: 
+            if forest_type == RandoForest or forest_type == RandomForest: 
                 pred_label = evaluate(X_tr.iloc[j])
             else:
                 pred_label = evaluate(X_tr.reindex([X_tr.index[j]]))
@@ -191,9 +196,9 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
             else:
                 tn += 1
         accuracy_tr += (tp + tn) / len(X_tr)
-        precision_tr += tp / (tp + fp)
-        recall_tr += tp / (tp + fn)
-        specificity_tr += tn / (tn + fp)
+        precision_tr += (0 if tp == 0 else tp / (tp + fp))
+        recall_tr += (0 if tp == 0 else tp / (tp + fn))
+        specificity_tr += (0 if tn == 0 else tn / (tn + fp))
 
         print(f"finished round {i + 1}")
 
@@ -225,13 +230,14 @@ def main(outcome_count = 2, division = 3):
     y = y.reindex(permute)
     y = y.reset_index(drop=True)
 
-    #final_index = int(len(X) * 0.8)
+    final_index = int(len(X) * 0.8)
     #tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
-    #hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
+    hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     
-    RandomForest(X, y, X.keys(), 10, 100, 20, "gain", 2)
+    #RandomForest(X, y, X.keys(), 1, 100, 20, "gain", 2)
 
-    eval_model(RandoForest, division, X, y, outcome_count=outcome_count)
+    eval_model(RandomForest, 10, X, y, outcome_count=outcome_count)
+    #eval_model(RandoForest, division, X, y, outcome_count=outcome_count)
     eval_model(sk.ensemble.RandomForestClassifier, division, X, y)
 
 if __name__ == "__main__":
