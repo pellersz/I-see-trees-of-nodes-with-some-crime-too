@@ -113,7 +113,7 @@ def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_
                     print(f"{yes_test}{yes_train} test accuracy = {evaluation_test}, train accuracy = {evaluation_train}, in {time_used} seconds with parameters: tree_count = {tree_count}, data_per_tree = {data_per_tree}, method = {method}")
             
 
-def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 10, data_per_tree = 100, max_height = 20):
+def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100, data_per_tree = 100, max_height = 20):
     chunk_size = len(X) / division
     time_used = 0 
     print(f"test started for {forest_type}")
@@ -230,9 +230,8 @@ def main(outcome_count = 2, division = 3):
     #tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     #hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     
-    eval_model(sk.ensemble.RandomForestClassifier, division, X, y)
     eval_model(RandoForest, division, X, y, outcome_count=outcome_count)
-
+    eval_model(sk.ensemble.RandomForestClassifier, division, X, y)
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,78 @@
+./full_run.sh
+running build_ext
+copying build/lib.linux-x86_64-cpython-314t/random_forest.cpython-314t-x86_64-linux-gnu.so -> 
+ 
+Getting data
+Found cached data
+
+test started for <class 'rando_forest.RandoForest'>
+finished round 1
+finished round 2
+finished round 3
+Test finished for <class 'rando_forest.RandoForest'> in time 7.691534440000396 seconds
+avg. test accuracy: 0.8856531388712746
+avg. test precision: 0.6458609637488948
+avg. test recall: 0.3744478306148135
+avg. test specificity 0.9673518669118407
+avg. test f-score: 0.4740549882359585
+avg. training accuracy: 0.9029588644296972
+avg. training precision: 0.7409683225694751
+avg. training recall: 0.4632795961569777
+avg. training specificity 0.973786444396914
+avg. training f-score: 0.570107699431408
+
+test started for <class 'sklearn.ensemble._forest.RandomForestClassifier'>
+finished round 1
+finished round 2
+finished round 3
+Test finished for <class 'sklearn.ensemble._forest.RandomForestClassifier'> in time 0.1276434790015628 seconds
+avg. test accuracy: 0.8946779599601413
+avg. test precision: 0.7028842230800615
+avg. test recall: 0.4147892588120292
+avg. test specificity 0.9714846779453218
+avg. test f-score: 0.5217066176223303
+avg. training accuracy: 0.9927282465003744
+avg. training precision: 0.992401117100734
+avg. training recall: 0.9550375210334906
+avg. training specificity 0.9988390599468605
+avg. training f-score: 0.9733608897220896
+
+╭─crackpityusz@archlinux ~/Stuff/MostBeautyfulYearsOfMyLife/m1.felev/emel/proj ‹master●› 
+╰─$ ./full_run.sh
+running build_ext
+copying build/lib.linux-x86_64-cpython-314t/random_forest.cpython-314t-x86_64-linux-gnu.so -> 
+ 
+Getting data
+Found cached data
+
+test started for <class 'rando_forest.RandoForest'>
+finished round 1
+finished round 2
+finished round 3
+Test finished for <class 'rando_forest.RandoForest'> in time 396.5274157900003 seconds
+avg. test accuracy: 0.8971857354228946
+avg. test precision: 0.7036671951282957
+avg. test recall: 0.47407956384700567
+avg. test specificity 0.965589738037445
+avg. test f-score: 0.5664956993812692
+avg. training accuracy: 0.9127365064278453
+avg. training precision: 0.7662589340250511
+avg. training recall: 0.5338431215015279
+avg. training specificity 0.9737883288520371
+avg. training f-score: 0.6292768471205664
+
+test started for <class 'sklearn.ensemble._forest.RandomForestClassifier'>
+finished round 1
+finished round 2
+finished round 3
+Test finished for <class 'sklearn.ensemble._forest.RandomForestClassifier'> in time 1.163667094999255 seconds
+avg. test accuracy: 0.9016992783162726
+avg. test precision: 0.7236922840926523
+avg. test recall: 0.4998168498168498
+avg. test specificity 0.9667779159758431
+avg. test f-score: 0.5912724108828838
+avg. training accuracy: 1.0
+avg. training precision: 1.0
+avg. training recall: 1.0
+avg. training specificity 1.0
+avg. training f-score: 1.0
