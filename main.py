@@ -9,7 +9,6 @@ import pandas as pd
 import sklearn as sk
 from ucimlrepo import fetch_ucirepo
 from time import perf_counter
-from statistics import mean
 
 def _handle_missing_values(df):
     for col in df.columns:
@@ -230,6 +229,8 @@ def main(outcome_count = 2, division = 3):
     #tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     #hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     
+    RandomForest(X, y, X.keys(), 10, 100, 20, "gain", 2)
+
     eval_model(RandoForest, division, X, y, outcome_count=outcome_count)
     eval_model(sk.ensemble.RandomForestClassifier, division, X, y)
 

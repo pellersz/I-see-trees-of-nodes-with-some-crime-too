@@ -171,14 +171,14 @@ class RandoForest:
         else:
             method = lambda p: p * math.log(p)
 
-        for i in range(len(feature_names)):
-            if np.issubdtype(type(X[feature_names[i]].iloc[0]), np.integer):
+        for feature_name in feature_names:
+            if np.issubdtype(type(X[feature_name].iloc[0]), np.integer):
                 categories = set()
-                for category in X[feature_names[i]]:
+                for category in X[feature_name]:
                     categories.add(category)
-                features.append((feature_names[i], True, len(categories)))
-            elif np.issubdtype(type(X[feature_names[i]].iloc[0]), np.floating):
-                features.append((feature_names[i], False, 2))
+                features.append((feature_name, True, len(categories)))
+            elif np.issubdtype(type(X[feature_name].iloc[0]), np.floating):
+                features.append((feature_name, False, 2))
             else:
                 pass
         

@@ -1,7 +1,9 @@
 from setuptools import setup
 from Cython.Build import cythonize
+import numpy
 
 setup(
-    name='Hello world app',
-    ext_modules=cythonize("random_forest.pyx"),
+    name='Random forest implementation',
+    ext_modules=cythonize("rrr.pyx"),
+    include_dirs=[numpy.get_include()]
 )
