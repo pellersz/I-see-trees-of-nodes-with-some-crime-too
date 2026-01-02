@@ -76,44 +76,103 @@ def tree_count_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count
         print(f"test accuracy = {test_accuracy / 4}, train accuracy = {train_accuracy / 4}, in {time_used / 4} seconds with parameters: tree_count = {tree_count}, data_per_tree = {data_per_tree}")
 
 
-def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count = 100, min_data_per_tree = 10, max_data_per_tree = 150):
+def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count = 100, min_data_per_tree = 30, max_data_per_tree = 150):
     best_test = 0
     best_train = 0
 
+    vals = [[[0.0 for _ in range(11)] for _ in range(min_data_per_tree, max_data_per_tree + 1)] for _ in range(min_tree_count, max_tree_count + 1)]
+    full_count = (max_data_per_tree + 1 - min_data_per_tree) * (max_tree_count + 1 - min_tree_count) 
+    curr_count = 0
+    
+
     for s in range(min_tree_count + min_data_per_tree, max_data_per_tree + max_tree_count + 1):
         for tree_count in range(min_tree_count, max_tree_count + 1):
-            for method in ("gini", "gain"):
+            for method in ("gini",):
                 data_per_tree = s - tree_count
                 if data_per_tree > max_data_per_tree:
                     continue
                 if data_per_tree < min_data_per_tree:
                     break
 
+                curr_count += 1
+
                 start = perf_counter()
                 forest = RandomForest(X_tr, y_tr, X_tr.keys(), tree_count, data_per_tree, 20, method, 2)
                 time_used = perf_counter() - start
-                evaluation_test = evaluate_model(forest, X_te, y_te.iloc)
-                evaluation_train = evaluate_model(forest, X_tr, y_tr.iloc)
-                
-                if evaluation_test > best_test:
-                    best_test = evaluation_test
-                    yes_test = "*"
-                elif evaluation_test == best_test:
-                    yes_test = ":"
-                else:
-                    yes_test = ""
+                #evaluation_test = evaluate_model(forest, X_te, y_te.iloc)
+                #evaluation_train = evaluate_model(forest, X_tr, y_tr.iloc)
+               
+                tp = 0
+                fp = 0
+                tn = 0
+                fn = 0
+                for j in range(len(X_te)):
+                    pred_label = forest.evaluate(X_te.iloc[j])
+                    true_label = y_te.iloc[j]
 
-                if evaluation_train > best_train:
-                    best_train = evaluation_train
-                    yes_train = "+"
-                elif evaluation_train == best_train:
-                    yes_train = "-"
-                else:
-                    yes_train = ""
+                    if pred_label == 1 and true_label == 1:
+                        tp += 1
+                    elif pred_label == 1:
+                        fp += 1
+                    elif true_label == 1:
+                        fn += 1
+                    else:
+                        tn += 1
 
-                if yes_test != "" or yes_train != "":
-                    print(f"{yes_test}{yes_train} test accuracy = {evaluation_test}, train accuracy = {evaluation_train}, in {time_used} seconds with parameters: tree_count = {tree_count}, data_per_tree = {data_per_tree}, method = {method}")
-            
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][0] = (tp + tn) / len(X_te)
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][1] = (0 if tp == 0 else tp / (tp + fp))
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][2] = (0 if tp == 0 else tp / (tp + fn))
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][3] = (0 if tn == 0 else tn / (tn + fp))
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][4] = 2 * tp / (2*tp + fp + fn)
+
+                tp = 0
+                fp = 0
+                tn = 0
+                fn = 0
+                for j in range(len(X_tr)):
+                    pred_label = forest.evaluate(X_tr.iloc[j])
+                    true_label = y_tr.iloc[j]
+
+                    if pred_label == 1 and true_label == 1:
+                        tp += 1
+                    elif pred_label == 1:
+                        fp += 1
+                    elif true_label == 1:
+                        fn += 1
+                    else:
+                        tn += 1
+
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][5] = (tp + tn) / len(X_te)
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][6] = (0 if tp == 0 else tp / (tp + fp))
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][7] = (0 if tp == 0 else tp / (tp + fn))
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][8] = (0 if tn == 0 else tn / (tn + fp))
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][9] = 2 * tp / (2*tp + fp + fn)
+
+                vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][10] = time_used
+
+                #if evaluation_test > best_test:
+                #    best_test = evaluation_test
+                #    yes_test = "*"
+                #elif evaluation_test == best_test:
+                #    yes_test = ":"
+                #else:
+                #    yes_test = ""
+
+                #if evaluation_train > best_train:
+                #    best_train = evaluation_train
+                #    yes_train = "+"
+                #elif evaluation_train == best_train:
+                #    yes_train = "-"
+                #else:
+                #    yes_train = ""
+
+                #if yes_test != "" or yes_train != "":
+                #    pass
+
+                    #print(f"{yes_test}{yes_train} test accuracy = {evaluation_test}, train accuracy = {evaluation_train}, in {time_used} seconds with parameters: tree_count = {tree_count}, data_per_tree = {data_per_tree}, method = {method}")
+        print(curr_count / full_count)     
+
+    pl.dump(vals, open("cached_res", "wb"))
 
 def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100, data_per_tree = 100, max_height = 20):
     chunk_size = len(X) / division
@@ -219,7 +278,7 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
     print("")
         
 
-def main(outcome_count = 2, division = 3):
+def main(outcome_count = 2, division = 10):
     print("Getting data")
     X, y = setup_data(outcome_count=outcome_count) 
     print("")
@@ -232,13 +291,16 @@ def main(outcome_count = 2, division = 3):
 
     final_index = int(len(X) * 0.8)
     #tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
-    hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
+    #hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     
     #RandomForest(X, y, X.keys(), 1, 100, 20, "gain", 2)
 
-    eval_model(RandomForest, 10, X, y, outcome_count=outcome_count)
+    eval_model(RandomForest, division, X, y, tree_count=10, outcome_count=outcome_count)
     #eval_model(RandoForest, division, X, y, outcome_count=outcome_count)
-    eval_model(sk.ensemble.RandomForestClassifier, division, X, y)
+    eval_model(sk.ensemble.RandomForestClassifier, division, X, y, tree_count=10, outcome_count=outcome_count)
+    eval_model(RandomForest, division, X, y, tree_count=100, outcome_count=outcome_count)
+    eval_model(sk.ensemble.RandomForestClassifier, division, X, y, tree_count=100, outcome_count=outcome_count)
+
 
 if __name__ == "__main__":
     main()
