@@ -1,8 +1,7 @@
-# Implementation of the random forest (classification) ML algorithm 
+# Random forest (classification) testing
 # Evaluated on crime statistics at https://archive.ics.uci.edu/dataset/183/communities+and+crime
 
 from random_forest import RandomForest
-#from random_forest import RandomForest 
 from rando_forest import RandoForest
 import pickle as pl
 import numpy as np
@@ -83,13 +82,9 @@ def tree_count_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count
 
 
 def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count = 100, min_data_per_tree = 30, max_data_per_tree = 150):
-    best_test = 0
-    best_train = 0
-
     vals = [[[0.0 for _ in range(11)] for _ in range(min_data_per_tree, max_data_per_tree + 1)] for _ in range(min_tree_count, max_tree_count + 1)]
     full_count = (max_data_per_tree + 1 - min_data_per_tree) * (max_tree_count + 1 - min_tree_count) 
     curr_count = 0
-    
 
     for s in range(min_tree_count + min_data_per_tree, max_data_per_tree + max_tree_count + 1):
         for tree_count in range(min_tree_count, max_tree_count + 1):
@@ -105,8 +100,6 @@ def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_
                 start = perf_counter()
                 forest = RandomForest(X_tr, y_tr, X_tr.keys(), tree_count, data_per_tree, 20, method, 2)
                 time_used = perf_counter() - start
-                #evaluation_test = evaluate_model(forest, X_te, y_te.iloc)
-                #evaluation_train = evaluate_model(forest, X_tr, y_tr.iloc)
                
                 tp = 0
                 fp = 0
@@ -156,26 +149,6 @@ def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_
 
                 vals[tree_count - min_tree_count][data_per_tree - min_data_per_tree][10] = time_used
 
-                #if evaluation_test > best_test:
-                #    best_test = evaluation_test
-                #    yes_test = "*"
-                #elif evaluation_test == best_test:
-                #    yes_test = ":"
-                #else:
-                #    yes_test = ""
-
-                #if evaluation_train > best_train:
-                #    best_train = evaluation_train
-                #    yes_train = "+"
-                #elif evaluation_train == best_train:
-                #    yes_train = "-"
-                #else:
-                #    yes_train = ""
-
-                #if yes_test != "" or yes_train != "":
-                #    pass
-
-                    #print(f"{yes_test}{yes_train} test accuracy = {evaluation_test}, train accuracy = {evaluation_train}, in {time_used} seconds with parameters: tree_count = {tree_count}, data_per_tree = {data_per_tree}, method = {method}")
         print(curr_count / full_count)     
 
     pl.dump(vals, open("cached_res", "wb"))
@@ -356,8 +329,6 @@ def explain_this(X_tr, y_tr, X_te, y_te, data = {}):
                 data[name] = 0
             data[name] += measure
     return data
-#file = open("explanation.html", "w")
-    #file.write(expl.as_html())
 
 
 def main(outcome_count = 2, division = 10):
@@ -371,20 +342,16 @@ def main(outcome_count = 2, division = 10):
     y = y.reindex(permute)
     y = y.reset_index(drop=True)
 
-    #make_some_plots()
-
-    final_index = int(len(X) * 0.8)
-    #tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
-    #hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
-  
-    #explain_this(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
-    #exit(0)
+    make_some_plots()
 
     eval_model(RandomForest, division, X, y, tree_count=100, data_per_tree=150, max_height=1000, outcome_count=outcome_count)
-    exit(0)
     eval_model(sk.ensemble.RandomForestClassifier, division, X, y, tree_count=10, outcome_count=outcome_count)
     eval_model(RandomForest, division, X, y, tree_count=100, outcome_count=outcome_count)
     eval_model(sk.ensemble.RandomForestClassifier, division, X, y, tree_count=100, outcome_count=outcome_count)
+    
+    final_index = int(len(X) * 0.8)
+    tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
+    hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
 
 
 if __name__ == "__main__":

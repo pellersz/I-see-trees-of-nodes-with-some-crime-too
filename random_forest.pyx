@@ -282,7 +282,6 @@ cdef class RandomForest:
 
 
     def predict_proba(self, x):
-        #print(x)
         sample_number = x.shape[0]
         res = [self.number_of_labels * [0.0] for _ in range(sample_number)]
         
