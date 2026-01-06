@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 from lime.lime_tabular import LimeTabularExplainer
 
 
+number_of_explainablity_tests = 100
+
+
 def _handle_missing_values(df):
     for col in df.columns:
         df[col].replace('?', np.nan, inplace=True)
@@ -179,6 +182,8 @@ def hyper_parameter_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_
 
 
 def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100, data_per_tree = 100, max_height = 20):
+    global number_of_explainablity_tests
+
     chunk_size = len(X) / division
     time_used = 0 
     print(f"test started for {forest_type}")
@@ -191,6 +196,8 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
     precision_tr = 0
     recall_tr = 0
     specificity_tr = 0
+
+    data = {}
 
     for i in range(division):
         X_tr = X.iloc[lambda x: (i * chunk_size > x.index) | ((i + 1) * chunk_size <= x.index)]
@@ -263,8 +270,10 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         recall_tr += (0 if tp == 0 else tp / (tp + fn))
         specificity_tr += (0 if tn == 0 else tn / (tn + fp))
 
-        print(f"finished round {i + 1}")
+        data = explain_this(X_tr, y_tr, X_te, y_te, data)   
 
+        print(f"finished round {i + 1}")
+    
     print(f"Test finished for {forest_type} in time {time_used} seconds")
     
     print(f"avg. test accuracy: {accuracy_te / division}")
@@ -278,6 +287,29 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
     print(f"avg. training recall: {recall_tr / division}")
     print(f"avg. training specificity {specificity_tr / division}")
     print(f"avg. training f-score: {2 / ((1 / (precision_tr / division)) + (1 / (recall_tr / division)))}")
+
+    data = [(key, data[key] / (division * number_of_explainablity_tests)) for key in data]
+    data = sorted(data, key=lambda elem: elem[1])
+    data = [data[:10], data[-10:]]
+    data[1].reverse()
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 6))
+    axes[0].barh(range(10), [elem[1] for elem in data[0]])
+    axes[0].set_yticks(range(10))
+    axes[0].set_yticklabels([elem[0] for elem in data[0]])
+    axes[0].set_xlabel("Mean negative importance")
+    axes[0].set_title(f"Top 10 Features by Mean negative importance")
+    axes[0].invert_yaxis()
+
+    axes[1].barh(range(10), [elem[1] for elem in data[1]])
+    axes[1].set_yticks(range(10))
+    axes[1].set_yticklabels([elem[0] for elem in data[1]])
+    axes[1].set_xlabel("Mean positive importance")
+    axes[1].set_title(f"Top 10 Features by Mean positive importance")
+    axes[1].invert_yaxis()
+
+    plt.tight_layout()
+    plt.show()
 
     print("")
 
@@ -312,13 +344,20 @@ def make_some_plots():
         plt.show()
 
 
-def explain_this(X_tr, y_tr, X_te, y_te):
+def explain_this(X_tr, y_tr, X_te, y_te, data = {}):
+    global number_of_explainablity_tests
     forest = RandomForest(X_tr, y_tr, X_tr.keys(), 100, 100, 20, "gini", 2)
-    explainer = LimeTabularExplainer(training_data=X_tr.to_numpy(), training_labels=y_tr.to_numpy(), feature_names=X_tr.keys(), class_names=("low", "high"))
-    print(y_te.to_numpy()[0])
-    expl = explainer.explain_instance(X_te.to_numpy()[0], forest.predict_proba, num_features=10, num_samples=300)
-    file = open("explanation.html", "w")
-    file.write(expl.as_html())
+    explainer = LimeTabularExplainer(training_data=X_tr.to_numpy(), training_labels=y_tr.to_numpy(), feature_names=X_tr.keys(), class_names=("low", "high"), discretize_continuous=False)
+
+    for i in range(number_of_explainablity_tests):
+        expl = explainer.explain_instance(X_te.to_numpy()[i], forest.predict_proba, num_features=20)
+        for name, measure in expl.as_list():
+            if name not in data:
+                data[name] = 0
+            data[name] += measure
+    return data
+#file = open("explanation.html", "w")
+    #file.write(expl.as_html())
 
 
 def main(outcome_count = 2, division = 10):
@@ -338,9 +377,8 @@ def main(outcome_count = 2, division = 10):
     #tree_count_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
     #hyper_parameter_search(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
   
-    explain_this(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
-    exit(0)
-
+    #explain_this(X[:final_index], y[:final_index], X[final_index:], y[final_index:])
+    #exit(0)
 
     eval_model(RandomForest, division, X, y, tree_count=100, data_per_tree=150, max_height=1000, outcome_count=outcome_count)
     exit(0)
