@@ -4,6 +4,7 @@ setup.py           uv.lock
 *.c
 *.so
 *.html
+*.zip
 build
 cached_obj
 cached_res
