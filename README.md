@@ -1,4 +1,4 @@
-### Random forest 
+## Random forest 
 This project contains an implementation of the Random Forest algorithm and also some testing done with it.
 
 #### Results found
