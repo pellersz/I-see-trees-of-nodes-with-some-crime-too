@@ -1,6 +1,9 @@
 ### Random forest 
 This project contains an implementation of the Random Forest algorithm and also some testing done with it.
 
+#### Results found
+The results obtained and description of the algorithm can be found in the file: `random\_forest.pdf`
+
 #### How to build
 run `uv run setup.py build_ext --inplace` then `uv run main.py` or just run the `full_run.sh` script
 
