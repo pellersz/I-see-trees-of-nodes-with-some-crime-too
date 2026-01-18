@@ -6,7 +6,9 @@ setup.py           uv.lock
 *.html
 build
 cached_obj
+cached_res
 pyrightconfig.json
 to_export.txt
 .venv
 path 
+__pycache__

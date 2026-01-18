@@ -344,7 +344,7 @@ def main(outcome_count = 2, division = 10):
 
     make_some_plots()
 
-    eval_model(RandomForest, division, X, y, tree_count=100, data_per_tree=150, max_height=1000, outcome_count=outcome_count)
+    eval_model(RandomForest, division, X, y, tree_count=10, data_per_tree=100, max_height=20, outcome_count=outcome_count)
     eval_model(sk.ensemble.RandomForestClassifier, division, X, y, tree_count=10, outcome_count=outcome_count)
     eval_model(RandomForest, division, X, y, tree_count=100, outcome_count=outcome_count)
     eval_model(sk.ensemble.RandomForestClassifier, division, X, y, tree_count=100, outcome_count=outcome_count)
