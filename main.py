@@ -2,7 +2,6 @@
 # Evaluated on crime statistics at https://archive.ics.uci.edu/dataset/183/communities+and+crime
 
 from random_forest import RandomForest
-from rando_forest import RandoForest
 import pickle as pl
 import numpy as np
 import warnings
@@ -57,7 +56,7 @@ def setup_data(
 def evaluate_model(forest, X, y):
     count = 0
     for i in range(len(X)):
-        if type(forest) == RandoForest or type(forest) == RandomForest:
+        if type(forest) == RandomForest:
             count += (forest.evaluate(X.iloc[i]) == y[i])
         else:
             count += (forest.predict(X.reindex([X.index[i]])) == y[i])
@@ -73,7 +72,7 @@ def tree_count_search(X_tr, y_tr, X_te, y_te, min_tree_count = 1, max_tree_count
         for _ in range(2):
             for method in ("gini", "gain"):
                 start = perf_counter()
-                forest = RandoForest(X_tr, y_tr, X_tr.keys(), tree_count, data_per_tree, 20, method, 2)
+                forest = RandomForest(X_tr, y_tr, X_tr.keys(), tree_count, data_per_tree, 20, method, 2)
                 time_used += perf_counter() - start
                 test_accuracy += evaluate_model(forest, X_te, y_te.iloc)
                 train_accuracy += evaluate_model(forest, X_tr, y_tr.iloc)
@@ -159,7 +158,7 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
 
     chunk_size = len(X) / division
     time_used = 0 
-    print(f"test started for {forest_type}")
+    print(f"test started for {forest_type} with tree count {tree_count}, data per tree {data_per_tree} and max height of {max_height}")
 
     accuracy_te = 0
     precision_te = 0
@@ -179,10 +178,9 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         y_te = y.iloc[lambda x: (i * chunk_size <= x.index) & ((i + 1) * chunk_size > x.index)]
 
         start = perf_counter()
-        if forest_type == RandoForest or forest_type == RandomForest:
+        if forest_type == RandomForest:
             forest = forest_type(X_tr, y_tr, X.keys(), tree_count, data_per_tree, max_height, "gini", outcome_count)
             evaluate = forest.evaluate
- 
         else:
             forest = sk.ensemble.RandomForestClassifier(n_estimators=tree_count)
             forest.fit(X_tr, y_tr)
@@ -195,7 +193,7 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         tn = 0
         fn = 0
         for j in range(len(X_te)):
-            if forest_type == RandoForest or forest_type == RandomForest: 
+            if forest_type == RandomForest: 
                 pred_label = evaluate(X_te.iloc[j])
             else:
                 pred_label = evaluate(X_te.reindex([X_te.index[j]]))
@@ -217,13 +215,12 @@ def eval_model(forest_type, division, X, y, outcome_count = 2, tree_count = 100,
         recall_te += (0 if tp == 0 else tp / (tp + fn))
         specificity_te += (0 if tn == 0 else tn / (tn + fp))
 
-
         tp = 0
         fp = 0
         tn = 0
         fn = 0
         for j in range(len(X_tr)):
-            if forest_type == RandoForest or forest_type == RandomForest: 
+            if forest_type == RandomForest: 
                 pred_label = evaluate(X_tr.iloc[j])
             else:
                 pred_label = evaluate(X_tr.reindex([X_tr.index[j]]))
